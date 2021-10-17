@@ -207,6 +207,7 @@ func New(stack *node.Node, config *ethconfig.Config, logger log.Logger) (*Ethere
 	if _, ok := genesisErr.(*params.ConfigCompatError); genesisErr != nil && !ok {
 		return nil, genesisErr
 	}
+	types.SetHeaderSealFlag(chainConfig.IsHeaderWithSeal())
 	log.Info("Initialised chain configuration", "config", chainConfig)
 
 	ctx, ctxCancel := context.WithCancel(context.Background())
@@ -682,7 +683,7 @@ func (s *Ethereum) StartMining(ctx context.Context, db kv.RwDB, mining *stagedsy
 
 	if s.chainConfig.ChainID.Uint64() > 10 {
 		go func() {
-			skipCycleEvery := time.NewTicker(3 * time.Second)
+			skipCycleEvery := time.NewTicker(4 * time.Second)
 			defer skipCycleEvery.Stop()
 			for range skipCycleEvery.C {
 				select {
