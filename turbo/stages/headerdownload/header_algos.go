@@ -159,8 +159,8 @@ func (hd *HeaderDownload) removeUpwards(toRemove []*Link) {
 
 func (hd *HeaderDownload) markPreverified(link *Link) {
 	// Go through all parent links that are not preveried and mark them too
-	for link != nil && !link.preverified {
-		fmt.Printf("marking link preferified [%d]\n", link.blockHeight)
+	for link != nil && !link.persisted {
+		//fmt.Printf("marking link preferified [%d]\n", link.blockHeight)
 		link.preverified = true
 		link = hd.links[link.header.ParentHash]
 	}
@@ -184,7 +184,7 @@ func (hd *HeaderDownload) extendUp(segment *ChainSegment, start, end int) error 
 		prevLink.next = append(prevLink.next, link)
 		prevLink = link
 		if _, ok := hd.preverifiedHashes[link.hash]; ok {
-			fmt.Printf("preverifying from extendUp [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
+			//fmt.Printf("preverifying from extendUp [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
 			hd.markPreverified(link)
 		}
 	}
@@ -239,18 +239,18 @@ func (hd *HeaderDownload) extendDown(segment *ChainSegment, start, end int) (boo
 				prevLink.next = append(prevLink.next, link)
 			}
 			prevLink = link
-			if !anchorPreverified {
-				if _, ok := hd.preverifiedHashes[link.hash]; ok {
-					fmt.Printf("preverifying from extendDown [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
-					hd.markPreverified(link)
-				}
+			//if !anchorPreverified {
+			if _, ok := hd.preverifiedHashes[link.hash]; ok {
+				//fmt.Printf("preverifying from extendDown [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
+				hd.markPreverified(link)
 			}
+			//}
 		}
 		prevLink.next = anchor.links
 		anchor.links = nil
 		if anchorPreverified {
 			// Mark the entire segment as preverified
-			fmt.Printf("preverifying from extendUp (anchor) [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
+			//fmt.Printf("preverifying from extendUp (anchor) [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
 			hd.markPreverified(prevLink)
 		}
 		return !preExisting, nil
@@ -292,18 +292,18 @@ func (hd *HeaderDownload) connect(segment *ChainSegment, start, end int) ([]Pena
 		link := hd.addHeaderAsLink(segment.Headers[i], false /* persisted */)
 		prevLink.next = append(prevLink.next, link)
 		prevLink = link
-		if !anchorPreverified {
-			if _, ok := hd.preverifiedHashes[link.hash]; ok {
-				fmt.Printf("preverifying from connect [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
-				hd.markPreverified(link)
-			}
+		//if !anchorPreverified {
+		if _, ok := hd.preverifiedHashes[link.hash]; ok {
+			//fmt.Printf("preverifying from connect [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
+			hd.markPreverified(link)
 		}
+		//}
 	}
 	prevLink.next = anchor.links
 	anchor.links = nil
 	if anchorPreverified {
 		// Mark the entire segment as preverified
-		fmt.Printf("preverifying from connect (anchor) [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
+		//fmt.Printf("preverifying from connect (anchor) [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
 		hd.markPreverified(prevLink)
 	}
 	var penalties []PenaltyItem
@@ -351,7 +351,7 @@ func (hd *HeaderDownload) newAnchor(segment *ChainSegment, start, end int, peerI
 		}
 		prevLink = link
 		if _, ok := hd.preverifiedHashes[link.hash]; ok {
-			fmt.Printf("preverifying from newAnchor [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
+			//fmt.Printf("preverifying from newAnchor [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
 			hd.markPreverified(link)
 		}
 	}
@@ -568,7 +568,7 @@ func (hd *HeaderDownload) RequestSkeleton() *HeaderRequest {
 	defer hd.lock.RUnlock()
 	log.Trace("Request skeleton", "anchors", len(hd.anchors), "top seen height", hd.topSeenHeight, "highestInDb", hd.highestInDb)
 	if hd.diagnostics {
-		//log.Info("Diagnostics: sent skeleton request", "anchors", len(hd.anchors), "top seen height", hd.topSeenHeight, "highestInDb", hd.highestInDb)
+		log.Info("Diagnostics: sent skeleton request", "anchors", len(hd.anchors), "top seen height", hd.topSeenHeight, "highestInDb", hd.highestInDb)
 	}
 	if len(hd.anchors) > 16 {
 		return nil // Need to be below anchor threshold to produce skeleton request
