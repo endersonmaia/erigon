@@ -239,12 +239,10 @@ func (hd *HeaderDownload) extendDown(segment *ChainSegment, start, end int) (boo
 				prevLink.next = append(prevLink.next, link)
 			}
 			prevLink = link
-			//if !anchorPreverified {
 			if _, ok := hd.preverifiedHashes[link.hash]; ok {
 				//fmt.Printf("preverifying from extendDown [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
 				hd.markPreverified(link)
 			}
-			//}
 		}
 		prevLink.next = anchor.links
 		anchor.links = nil
@@ -297,7 +295,6 @@ func (hd *HeaderDownload) connect(segment *ChainSegment, start, end int) ([]Pena
 			//fmt.Printf("preverifying from connect [%d-%d]\n", segment.Headers[start].Number, segment.Headers[end-1].Number)
 			hd.markPreverified(link)
 		}
-		//}
 	}
 	prevLink.next = anchor.links
 	anchor.links = nil
