@@ -2,6 +2,7 @@ package snapshotsync
 
 import (
 	"context"
+	"github.com/ledgerwatch/erigon-lib/gointerfaces/snapshotsync"
 	"github.com/ledgerwatch/erigon-lib/kv"
 	"github.com/ledgerwatch/erigon-lib/kv/mdbx"
 	"github.com/ledgerwatch/log/v3"
@@ -16,12 +17,12 @@ func CreateStateSnapshot(ctx context.Context, snapshotPath string, logger log.Lo
 	}
 
 	return mdbx.NewMDBX(logger).WithTablessCfg(func(defaultBuckets kv.TableCfg) kv.TableCfg {
-		return BucketConfigs[SnapshotType_state]
+		return BucketConfigs[snapshotsync.SnapshotType_state]
 	}).Path(snapshotPath).DBVerbosity(kv.DBVerbosityLvl(2)).Open()
 }
 
 func OpenStateSnapshot(dbPath string, logger log.Logger) (kv.RoDB, error) {
 	return mdbx.NewMDBX(logger).Path(dbPath).WithTablessCfg(func(defaultBuckets kv.TableCfg) kv.TableCfg {
-		return BucketConfigs[SnapshotType_state]
+		return BucketConfigs[snapshotsync.SnapshotType_state]
 	}).Readonly().Open()
 }

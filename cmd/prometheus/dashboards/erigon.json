@@ -22,7 +22,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1632801657282,
+  "iteration": 1633955165555,
   "links": [],
   "panels": [
     {
@@ -1011,7 +1011,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "8.1.2",
+      "pluginVersion": "8.1.6",
       "targets": [
         {
           "expr": "ru_inblock{instance=~\"$instance\"}",
@@ -1916,7 +1916,32 @@
           },
           "unit": "s"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "{instance=\"turbogeth16c.weblogix.it:6062\", job=\"erigon\", quantile=\"0.75\"}"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 5,
@@ -3070,9 +3095,34 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "reqps"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "success eth_call turbogeth16c.weblogix.it:6062 "
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -3097,14 +3147,422 @@
       "targets": [
         {
           "exemplar": true,
+          "expr": "rate(rpc_duration_seconds_count{instance=~\"$instance\",success=\"success\"}[1m])",
+          "interval": "",
+          "legendFormat": "success {{ method }} {{ instance }} ",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "rate(rpc_duration_seconds_count{instance=~\"$instance\",success=\"failure\"}[1m])",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "failure {{ method }} {{ instance }} ",
+          "refId": "B"
+        }
+      ],
+      "title": "RPS",
+      "transformations": [],
+      "type": "timeseries"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 80
+      },
+      "id": 186,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "last"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "db_begin_seconds{quantile=\"$quantile\",instance=~\"$instance\"}",
+          "interval": "",
+          "legendFormat": "db_begin_seconds: {{ method }} {{ instance }}",
+          "refId": "A"
+        }
+      ],
+      "title": "DB begin",
+      "transformations": [],
+      "type": "timeseries"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  " eth_call turbogeth16c.weblogix.it:6062 success",
+                  " eth_call turbogeth16c.weblogix.it:6062 failure"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 88
+      },
+      "id": 187,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "last"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
           "expr": "rpc_duration_seconds{quantile=\"$quantile\",instance=~\"$instance\"}",
           "interval": "",
-          "legendFormat": "rpc_duration_seconds: {{ method }} {{ instance }}",
+          "legendFormat": " {{ method }} {{ instance }} {{ success }}",
           "refId": "A"
         }
       ],
       "title": "Timings",
       "transformations": [],
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 88
+      },
+      "id": 188,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "expr": "go_goroutines{instance=~\"$instance\"}",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "go/goroutines: {{instance}}",
+          "refId": "A"
+        },
+        {
+          "expr": "go_threads{instance=~\"$instance\"}",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "go/threads: {{instance}}",
+          "refId": "B"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "GO Goroutines and Threads",
+      "type": "timeseries"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 96
+      },
+      "id": 189,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "last"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "cache_keys_total{name=\"rpc\",instance=~\"$instance\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "keys: {{ instance }} ",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "cache_list_total{name=\"rpc\",instance=~\"$instance\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "list: {{ instance }} ",
+          "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "cache_code_keys_total{name=\"rpc\",instance=~\"$instance\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "code_keys: {{ instance }} ",
+          "refId": "C"
+        },
+        {
+          "exemplar": true,
+          "expr": "cache_code_list_total{name=\"rpc\",instance=~\"$instance\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "code_list: {{ instance }} ",
+          "refId": "D"
+        }
+      ],
+      "title": "Cache keys",
       "type": "timeseries"
     },
     {
@@ -3160,10 +3618,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 80
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 96
       },
       "id": 184,
       "options": {
@@ -3187,6 +3645,14 @@
           "interval": "",
           "legendFormat": "hit rate: {{ instance }} ",
           "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "sum(delta(cache_code_total{result=\"hit\",name=\"rpc\",instance=~\"$instance\"}[1m]))/sum(delta(cache_code_total{name=\"rpc\",instance=~\"$instance\"}[1m])) ",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "code hit rate: {{ instance }} ",
+          "refId": "B"
         }
       ],
       "title": "Cache hit-rate",
@@ -3199,7 +3665,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 88
+        "y": 102
       },
       "id": 146,
       "panels": [
@@ -3898,7 +4364,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 89
+        "y": 103
       },
       "id": 75,
       "panels": [],
@@ -3962,7 +4428,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 90
+        "y": 104
       },
       "id": 96,
       "links": [],
@@ -4065,7 +4531,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 90
+        "y": 104
       },
       "id": 77,
       "links": [],
@@ -4123,7 +4589,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 96
+        "y": 110
       },
       "id": 4,
       "panels": [],
@@ -4167,7 +4633,7 @@
         "h": 3,
         "w": 4,
         "x": 0,
-        "y": 97
+        "y": 111
       },
       "id": 108,
       "interval": null,
@@ -4193,7 +4659,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.1.2",
+      "pluginVersion": "8.1.6",
       "targets": [
         {
           "expr": "stage_headers{instance=~\"$instance\"}",
@@ -4246,7 +4712,7 @@
         "h": 3,
         "w": 4,
         "x": 4,
-        "y": 97
+        "y": 111
       },
       "id": 111,
       "interval": null,
@@ -4272,7 +4738,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.1.2",
+      "pluginVersion": "8.1.6",
       "targets": [
         {
           "exemplar": true,
@@ -4326,7 +4792,7 @@
         "h": 3,
         "w": 4,
         "x": 8,
-        "y": 97
+        "y": 111
       },
       "id": 109,
       "interval": null,
@@ -4352,7 +4818,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.1.2",
+      "pluginVersion": "8.1.6",
       "targets": [
         {
           "exemplar": true,
@@ -4406,7 +4872,7 @@
         "h": 3,
         "w": 4,
         "x": 12,
-        "y": 97
+        "y": 111
       },
       "id": 113,
       "interval": null,
@@ -4432,7 +4898,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.1.2",
+      "pluginVersion": "8.1.6",
       "targets": [
         {
           "expr": "txpool_pending{instance=~\"$instance\"}",
@@ -4485,7 +4951,7 @@
         "h": 3,
         "w": 4,
         "x": 16,
-        "y": 97
+        "y": 111
       },
       "id": 114,
       "interval": null,
@@ -4511,7 +4977,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.1.2",
+      "pluginVersion": "8.1.6",
       "targets": [
         {
           "expr": "txpool_queued{instance=~\"$instance\"}",
@@ -4564,7 +5030,7 @@
         "h": 3,
         "w": 4,
         "x": 20,
-        "y": 97
+        "y": 111
       },
       "id": 115,
       "interval": null,
@@ -4590,7 +5056,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.1.2",
+      "pluginVersion": "8.1.6",
       "targets": [
         {
           "expr": "txpool_local{instance=~\"$instance\"}",
@@ -4664,7 +5130,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 100
+        "y": 114
       },
       "id": 110,
       "links": [],
@@ -4768,7 +5234,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 100
+        "y": 114
       },
       "id": 116,
       "links": [],
@@ -4872,7 +5338,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 106
+        "y": 120
       },
       "id": 117,
       "links": [],
@@ -5000,7 +5466,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 113
+        "y": 127
       },
       "id": 138,
       "panels": [
@@ -5165,14 +5631,12 @@
       {
         "allValue": null,
         "current": {
-          "selected": true,
+          "selected": false,
           "text": [
-            "turbogeth16c.weblogix.it:6060",
-            "turbogeth16c.weblogix.it:6061"
+            "turbogeth16c.weblogix.it:6062"
           ],
           "value": [
-            "turbogeth16c.weblogix.it:6060",
-            "turbogeth16c.weblogix.it:6061"
+            "turbogeth16c.weblogix.it:6062"
           ]
         },
         "datasource": "Prometheus",
@@ -5278,7 +5742,7 @@
     ]
   },
   "time": {
-    "from": "now-2m",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {
@@ -5308,5 +5772,5 @@
   "timezone": "",
   "title": "Erigon Prometheus",
   "uid": "FPpjH6Hik",
-  "version": 45
+  "version": 55
 }

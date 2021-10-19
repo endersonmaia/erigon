@@ -119,7 +119,6 @@ func HeadersForward(
 	var peer []byte
 	stopped := false
 	prevProgress := headerProgress
-	noProgressCount := 0 // How many time the progress was printed without actual progress
 Loop:
 	for !stopped {
 		currentTime := uint64(time.Now().Unix())
@@ -128,7 +127,7 @@ Loop:
 			peer = cfg.headerReqSend(ctx, req)
 			if peer != nil {
 				cfg.hd.SentRequest(req, currentTime, 5 /* timeout */)
-				log.Debug("Sent request", "height", req.Number)
+				log.Trace("Sent request", "height", req.Number)
 			}
 		}
 		cfg.penalize(ctx, penalties)
@@ -139,7 +138,7 @@ Loop:
 				peer = cfg.headerReqSend(ctx, req)
 				if peer != nil {
 					cfg.hd.SentRequest(req, currentTime, 5 /*timeout */)
-					log.Debug("Sent request", "height", req.Number)
+					log.Trace("Sent request", "height", req.Number)
 				}
 			}
 			cfg.penalize(ctx, penalties)
@@ -151,7 +150,7 @@ Loop:
 		if req != nil {
 			peer = cfg.headerReqSend(ctx, req)
 			if peer != nil {
-				log.Debug("Sent skeleton request", "height", req.Number)
+				log.Trace("Sent skeleton request", "height", req.Number)
 			}
 		}
 		// Load headers into the database
@@ -162,9 +161,6 @@ Loop:
 		announces := cfg.hd.GrabAnnounces()
 		if len(announces) > 0 {
 			cfg.announceNewHashes(ctx, announces)
-		}
-		if s.BlockNumber > 0 && noProgressCount >= 5 {
-			break
 		}
 		if headerInserter.BestHeaderChanged() { // We do not break unless there best header changed
 			if !initialCycle {
@@ -185,17 +181,12 @@ Loop:
 			stopped = true
 		case <-logEvery.C:
 			progress := cfg.hd.Progress()
-			if prevProgress == progress {
-				noProgressCount++
-			} else {
-				noProgressCount = 0 // Reset, there was progress
-			}
 			logProgressHeaders(logPrefix, prevProgress, progress)
 			prevProgress = progress
 		case <-timer.C:
 			log.Trace("RequestQueueTime (header) ticked")
 		case <-cfg.hd.DeliveryNotify:
-			log.Debug("headerLoop woken up by the incoming request")
+			log.Trace("headerLoop woken up by the incoming request")
 		case <-cfg.hd.SkipCycleHack:
 			break Loop
 		}
@@ -216,7 +207,7 @@ Loop:
 	if stopped {
 		return libcommon.ErrStopped
 	}
-	// We do not print the followin line if the stage was interrupted
+	// We do not print the following line if the stage was interrupted
 	log.Info(fmt.Sprintf("[%s] Processed", logPrefix), "highest inserted", headerInserter.GetHighest(), "age", common.PrettyAge(time.Unix(int64(headerInserter.GetHighestTimestamp()), 0)))
 	return nil
 }

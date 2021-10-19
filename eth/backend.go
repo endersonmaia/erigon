@@ -207,6 +207,7 @@ func New(stack *node.Node, config *ethconfig.Config, logger log.Logger) (*Ethere
 	if _, ok := genesisErr.(*params.ConfigCompatError); genesisErr != nil && !ok {
 		return nil, genesisErr
 	}
+	types.SetHeaderSealFlag(chainConfig.IsHeaderWithSeal())
 	log.Info("Initialised chain configuration", "config", chainConfig)
 
 	ctx, ctxCancel := context.WithCancel(context.Background())
@@ -370,6 +371,8 @@ func New(stack *node.Node, config *ethconfig.Config, logger log.Logger) (*Ethere
 		cfg.PendingSubPoolLimit = int(config.TxPool.GlobalSlots)
 		cfg.BaseFeeSubPoolLimit = int(config.TxPool.GlobalBaseFeeQueue)
 		cfg.QueuedSubPoolLimit = int(config.TxPool.GlobalQueue)
+		cfg.MinFeeCap = config.TxPool.PriceLimit
+		cfg.AccountSlots = config.TxPool.AccountSlots
 		cfg.LogEvery = 1 * time.Minute    //5 * time.Minute
 		cfg.CommitEvery = 1 * time.Minute //5 * time.Minute
 
@@ -498,21 +501,25 @@ func New(stack *node.Node, config *ethconfig.Config, logger log.Logger) (*Ethere
 			}
 
 			if backend.config.TxPool.V2 {
-				if err := backend.txPool2DB.View(context.Background(), func(tx kv.Tx) error {
-					pendingBaseFee := misc.CalcBaseFee(chainConfig, hh)
-					return backend.txPool2.OnNewBlock(context.Background(), &remote.StateChangeBatch{
-						PendingBlockBaseFee: pendingBaseFee.Uint64(),
-						DatabaseViewID:      tx.ViewID(),
-						ChangeBatch: []*remote.StateChange{
-							{BlockHeight: hh.Number.Uint64(), BlockHash: gointerfaces.ConvertHashToH256(hh.Hash())},
-						},
-					}, txpool2.TxSlots{}, txpool2.TxSlots{}, tx)
-				}); err != nil {
-					return nil, err
+				if hh != nil {
+					if err := backend.txPool2DB.View(context.Background(), func(tx kv.Tx) error {
+						pendingBaseFee := misc.CalcBaseFee(chainConfig, hh)
+						return backend.txPool2.OnNewBlock(context.Background(), &remote.StateChangeBatch{
+							PendingBlockBaseFee: pendingBaseFee.Uint64(),
+							DatabaseViewID:      tx.ViewID(),
+							ChangeBatch: []*remote.StateChange{
+								{BlockHeight: hh.Number.Uint64(), BlockHash: gointerfaces.ConvertHashToH256(hh.Hash())},
+							},
+						}, txpool2.TxSlots{}, txpool2.TxSlots{}, tx)
+					}); err != nil {
+						return nil, err
+					}
 				}
 			} else {
-				if err := backend.txPool.Start(hh.GasLimit, execution); err != nil {
-					return nil, err
+				if hh != nil {
+					if err := backend.txPool.Start(hh.GasLimit, execution); err != nil {
+						return nil, err
+					}
 				}
 			}
 		}
@@ -662,12 +669,12 @@ func (s *Ethereum) StartMining(ctx context.Context, db kv.RwDB, mining *stagedsy
 	eb, err := s.Etherbase()
 	if err != nil {
 		log.Error("Cannot start mining without etherbase", "err", err)
-		return fmt.Errorf("etherbase missing: %v", err)
+		return fmt.Errorf("etherbase missing: %w", err)
 	}
 	if clique, ok := s.engine.(*clique.Clique); ok {
 		if cfg.SigKey == nil {
 			log.Error("Etherbase account unavailable locally", "err", err)
-			return fmt.Errorf("signer missing: %v", err)
+			return fmt.Errorf("signer missing: %w", err)
 		}
 
 		clique.Authorize(eb, func(_ common.Address, mimeType string, message []byte) ([]byte, error) {
@@ -677,7 +684,7 @@ func (s *Ethereum) StartMining(ctx context.Context, db kv.RwDB, mining *stagedsy
 
 	if s.chainConfig.ChainID.Uint64() > 10 {
 		go func() {
-			skipCycleEvery := time.NewTicker(3 * time.Second)
+			skipCycleEvery := time.NewTicker(4 * time.Second)
 			defer skipCycleEvery.Stop()
 			for range skipCycleEvery.C {
 				select {

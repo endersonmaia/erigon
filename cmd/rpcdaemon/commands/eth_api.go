@@ -8,16 +8,15 @@ import (
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/holiman/uint256"
+	"github.com/ledgerwatch/erigon-lib/gointerfaces/txpool"
 	"github.com/ledgerwatch/erigon-lib/kv"
 	"github.com/ledgerwatch/erigon-lib/kv/kvcache"
-	"github.com/ledgerwatch/erigon/consensus/misc"
-
-	"github.com/ledgerwatch/erigon-lib/gointerfaces/txpool"
 	"github.com/ledgerwatch/erigon/cmd/rpcdaemon/filters"
 	"github.com/ledgerwatch/erigon/cmd/rpcdaemon/services"
 	"github.com/ledgerwatch/erigon/common"
 	"github.com/ledgerwatch/erigon/common/hexutil"
 	"github.com/ledgerwatch/erigon/common/math"
+	"github.com/ledgerwatch/erigon/consensus/misc"
 	"github.com/ledgerwatch/erigon/core/rawdb"
 	"github.com/ledgerwatch/erigon/core/types"
 	ethFilters "github.com/ledgerwatch/erigon/eth/filters"
@@ -105,13 +104,20 @@ type BaseAPI struct {
 	_chainConfig *params.ChainConfig
 	_genesis     *types.Block
 	_genesisLock sync.RWMutex
+
+	TevmEnabled bool // experiment
 }
 
 func NewBaseApi(f *filters.Filters, stateCache kvcache.Cache, singleNodeMode bool) *BaseAPI {
-	var blocksLRU *lru.Cache
+	blocksLRUSize := 128 // ~32Mb
 	if !singleNodeMode {
-		blocksLRU, _ = lru.New(256)
+		blocksLRUSize = 512
 	}
+	blocksLRU, err := lru.New(blocksLRUSize)
+	if err != nil {
+		panic(err)
+	}
+
 	return &BaseAPI{filters: f, stateCache: stateCache, blocksLRU: blocksLRU}
 }
 
@@ -119,6 +125,8 @@ func (api *BaseAPI) chainConfig(tx kv.Tx) (*params.ChainConfig, error) {
 	cfg, _, err := api.chainConfigWithGenesis(tx)
 	return cfg, err
 }
+
+func (api *BaseAPI) EnableTevmExperiment() { api.TevmEnabled = true }
 
 // nolint:unused
 func (api *BaseAPI) genesis(tx kv.Tx) (*types.Block, error) {

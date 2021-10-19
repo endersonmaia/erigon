@@ -53,7 +53,18 @@ func StageLoop(
 		start := time.Now()
 
 		// Estimate the current top height seen from the peer
-		height := hd.TopSeenHeight()
+		height, err := TopSeenHeight(db, sync, initialCycle, hd)
+		if err != nil {
+			if errors.Is(err, libcommon.ErrStopped) || errors.Is(err, context.Canceled) {
+				return
+			}
+			log.Error("Staged Sync", "error", err)
+			if recoveryErr := hd.RecoverFromDb(db); recoveryErr != nil {
+				log.Error("Failed to recover header downloader", "error", recoveryErr)
+			}
+			continue
+		}
+
 		if err := StageLoopStep(ctx, db, sync, height, notifications, initialCycle, updateHead, nil, snapshotEpochBlock); err != nil {
 			if errors.Is(err, libcommon.ErrStopped) || errors.Is(err, context.Canceled) {
 				return
@@ -82,6 +93,27 @@ func StageLoop(
 	}
 }
 
+// TopSeenHeight - returns hd.TopSeenHeight() or run stages.Header once to set correct hd.TopSeenHeight()
+// because headers downloading process happening in the background - means if hd.TopSeenHeight() > 0 is a
+// good estimation for sync step size
+func TopSeenHeight(db kv.RwDB, sync *stagedsync.Sync, initialCycle bool, hd *headerdownload.HeaderDownload) (uint64, error) {
+	height := hd.TopSeenHeight()
+	if height > 0 {
+		return height, nil
+	}
+	if !initialCycle {
+		return height, nil
+	}
+	stagesBackup := sync.DisableAllStages()
+	defer sync.EnableStages(stagesBackup...)
+
+	sync.EnableStages(stages.Headers)
+	if err := sync.Run(db, nil, true); err != nil {
+		return 0, err
+	}
+	return hd.TopSeenHeight(), nil
+}
+
 func StageLoopStep(
 	ctx context.Context,
 	db kv.RwDB,
@@ -94,17 +126,14 @@ func StageLoopStep(
 	snapshotEpochSize uint64,
 ) (err error) {
 	defer func() { err = debug.ReportPanicAndRecover(err) }() // avoid crash because Erigon's core does many things -
-	var origin, hashStateStageProgress, finishProgressBefore, executionBefore uint64
-	if err = db.View(ctx, func(tx kv.Tx) error {
+
+	var origin, finishProgressBefore, executionBefore uint64
+	if err := db.View(ctx, func(tx kv.Tx) error {
 		origin, err = stages.GetStageProgress(tx, stages.Headers)
 		if err != nil {
 			return err
 		}
-		hashStateStageProgress, err = stages.GetStageProgress(tx, stages.Bodies) // TODO: shift this when more stages are added
-		if err != nil {
-			return err
-		}
-		finishProgressBefore, err = stages.GetStageProgress(tx, stages.Finish) // TODO: shift this when more stages are added
+		finishProgressBefore, err = stages.GetStageProgress(tx, stages.Finish)
 		if err != nil {
 			return err
 		}
@@ -117,7 +146,7 @@ func StageLoopStep(
 		return err
 	}
 
-	canRunCycleInOneTransaction := !initialCycle && highestSeenHeader-origin < 8096 && highestSeenHeader-hashStateStageProgress < 8096
+	canRunCycleInOneTransaction := highestSeenHeader-origin < 8096 && highestSeenHeader-finishProgressBefore < 8096
 	snapshotBlock := snapshotsync.CurrentStateSnapshotBlock(highestSeenHeader, snapshotEpochSize)
 	if snapshotBlock > 0 && highestSeenHeader >= snapshotBlock && snapshotBlock > executionBefore {
 		canRunCycleInOneTransaction = false
@@ -157,7 +186,7 @@ func StageLoopStep(
 	var headTd *big.Int
 	var head uint64
 	var headHash common.Hash
-	if head, err = stages.GetStageProgress(rotx, stages.Finish); err != nil {
+	if head, err = stages.GetStageProgress(rotx, stages.Headers); err != nil {
 		return err
 	}
 	if headHash, err = rawdb.ReadCanonicalHash(rotx, head); err != nil {
@@ -174,27 +203,25 @@ func StageLoopStep(
 		}
 	}
 	rotx.Rollback()
-	headTd256 := new(uint256.Int)
-	overflow := headTd256.SetFromBig(headTd)
+
+	headTd256, overflow := uint256.FromBig(headTd)
 	if overflow {
 		return fmt.Errorf("headTds higher than 2^256-1")
 	}
 	updateHead(ctx, head, headHash, headTd256)
 
-	if notifications.Accumulator != nil {
+	if notifications != nil && notifications.Accumulator != nil {
 		if err := db.View(ctx, func(tx kv.Tx) error {
 			header := rawdb.ReadCurrentHeader(tx)
 			if header == nil {
 				return nil
 			}
+
 			pendingBaseFee := misc.CalcBaseFee(notifications.Accumulator.ChainConfig(), header)
 			notifications.Accumulator.SendAndReset(ctx, notifications.StateChangesConsumer, pendingBaseFee.Uint64())
 
-			err = stagedsync.NotifyNewHeaders(ctx, finishProgressBefore, sync.PrevUnwindPoint(), notifications.Events, tx)
-			if err != nil {
-				return err
-			}
-			return nil
+			return stagedsync.NotifyNewHeaders(ctx, finishProgressBefore, head, sync.PrevUnwindPoint(), notifications.Events, tx)
+
 		}); err != nil {
 			return err
 		}
