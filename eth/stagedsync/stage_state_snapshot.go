@@ -119,7 +119,7 @@ func SpawnStateSnapshotGenerationStage(s *StageState, tx kv.RwTx, cfg SnapshotSt
 		return err
 	}
 
-	snapshotPath := snapshotsync.SnapshotName(cfg.tmpDir, "state", snapshotBlock)
+	snapshotPath := snapshotsync.SnapshotName(cfg.snapshotDir, "state", snapshotBlock)
 	//todo change tmp dir to snapshots folder
 	snKV, err := snapshotsync.CreateStateSnapshot(ctx, snapshotPath, cfg.log)
 	if err != nil {

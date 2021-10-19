@@ -56,6 +56,7 @@ type ExecuteBlockCfg struct {
 	accumulator             *shards.Accumulator
 	stateSnapshotGeneration bool
 	snapshotEpochSize       uint64
+	snapshotDir				string
 }
 
 func StageExecuteBlocksCfg(

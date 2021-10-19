@@ -117,10 +117,6 @@ func StageLoopStep(
 		return err
 	}
 
-	if notifications != nil && notifications.Accumulator != nil {
-		notifications.Accumulator.Reset()
-	}
-
 	canRunCycleInOneTransaction := !initialCycle && highestSeenHeader-origin < 8096 && highestSeenHeader-hashStateStageProgress < 8096
 	snapshotBlock := snapshotsync.CurrentStateSnapshotBlock(highestSeenHeader, snapshotEpochSize)
 	if snapshotBlock > 0 && highestSeenHeader >= snapshotBlock && snapshotBlock > executionBefore {
