@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
-FROM docker.io/library/golang:1.17-alpine3.14 AS builder
+FROM docker.io/library/golang:1.16-buster AS builder
 
-RUN apk --no-cache add make gcc g++ linux-headers git bash ca-certificates libgcc libstdc++
+RUN apt-get update && apt-get install -y make gcc g++ linux-headers git bash ca-certificates libgcc libstdc++
 
 WORKDIR /app
 ADD . .
@@ -9,7 +9,7 @@ ADD . .
 # expect that host run `git submodule update --init`
 RUN make erigon rpcdaemon integration sentry
 
-FROM docker.io/library/alpine:3.14
+FROM docker.io/library/debian:buster
 
 RUN apk add --no-cache ca-certificates libgcc libstdc++ tzdata
 COPY --from=builder /app/build/bin/* /usr/local/bin/
