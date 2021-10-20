@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM docker.io/library/golang:1.16-buster AS builder
 
-RUN apt-get update && apt-get install -y make gcc g++ git bash ca-certificates libgcc libstdc++
+RUN apt-get update && apt-get install -y make gcc g++ git bash ca-certificates 
 
 WORKDIR /app
 ADD . .
