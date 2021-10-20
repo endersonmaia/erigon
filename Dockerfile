@@ -11,7 +11,7 @@ RUN make erigon rpcdaemon integration sentry
 
 FROM docker.io/library/debian:buster
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apt-get update && apt-get install -y  ca-certificates tzdata
 COPY --from=builder /app/build/bin/* /usr/local/bin/
 
 RUN adduser -H -u 1000 -g 1000 -D erigon
