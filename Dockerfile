@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM docker.io/library/golang:1.16-buster AS builder
 
-RUN apt-get update && apt-get install -y make gcc g++ git bash ca-certificates 
+RUN apt-get update && apt-get install -y make gcc g++ git bash ca-certificates
 
 WORKDIR /app
 ADD . .
@@ -11,7 +11,7 @@ RUN make erigon rpcdaemon integration sentry
 
 FROM docker.io/library/debian:buster
 
-RUN apk add --no-cache ca-certificates libgcc libstdc++ tzdata
+RUN apk add --no-cache ca-certificates tzdata
 COPY --from=builder /app/build/bin/* /usr/local/bin/
 
 RUN adduser -H -u 1000 -g 1000 -D erigon
