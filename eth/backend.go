@@ -484,6 +484,7 @@ func New(stack *node.Node, config *ethconfig.Config, logger log.Logger) (*Ethere
 				hh := rawdb.ReadCurrentHeader(tx)
 				tx.Rollback()
 				if hh == nil {
+					panic(1)
 					return nil
 				}
 				if backend.config.TxPool.V2 {
