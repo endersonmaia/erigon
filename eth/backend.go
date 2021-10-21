@@ -480,7 +480,7 @@ func New(stack *node.Node, config *ethconfig.Config, logger log.Logger) (*Ethere
 		// start pool on non-mainnet immediately
 		if backend.chainConfig.ChainID.Uint64() != params.MainnetChainConfig.ChainID.Uint64() && !backend.config.TxPool.Disable {
 			if err := chainKv.View(ctx, func(tx kv.Tx) error {
-				execution, _ := stages.GetStageProgress(tx, stages.Execution)
+				//execution, _ := stages.GetStageProgress(tx, stages.Execution)
 				hh := rawdb.ReadCurrentHeader(tx)
 				tx.Rollback()
 				if hh == nil {
