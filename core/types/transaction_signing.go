@@ -203,6 +203,7 @@ func (sg Signer) SenderWithContext(context *secp256k1.Context, tx Transaction) (
 				return common.Address{}, fmt.Errorf("protected tx is not supported by signer %s", sg)
 			}
 			if !DeriveChainId(&t.V).Eq(&sg.chainID) {
+				panic(fmt.Sprintf("ids: %d, %d\n", DeriveChainId(&t.V).Uint64(), sg.chainID.Uint64()))
 				return common.Address{}, ErrInvalidChainId
 			}
 			V.Sub(&t.V, &sg.chainIDMul)
@@ -215,9 +216,11 @@ func (sg Signer) SenderWithContext(context *secp256k1.Context, tx Transaction) (
 		}
 		if t.ChainID == nil {
 			if !sg.chainID.IsZero() {
+				panic(1)
 				return common.Address{}, ErrInvalidChainId
 			}
 		} else if !t.ChainID.Eq(&sg.chainID) {
+			panic(fmt.Sprintf("ids: %d, %d\n", t.ChainID.Uint64(), sg.chainID.Uint64()))
 			return common.Address{}, ErrInvalidChainId
 		}
 		// ACL txs are defined to use 0 and 1 as their recovery id, add
@@ -230,9 +233,11 @@ func (sg Signer) SenderWithContext(context *secp256k1.Context, tx Transaction) (
 		}
 		if t.ChainID == nil {
 			if !sg.chainID.IsZero() {
+				panic(1)
 				return common.Address{}, ErrInvalidChainId
 			}
 		} else if !t.ChainID.Eq(&sg.chainID) {
+			panic(fmt.Sprintf("ids: %d, %d\n", t.ChainID.Uint64(), sg.chainID.Uint64()))
 			return common.Address{}, ErrInvalidChainId
 		}
 		// ACL and DynamicFee txs are defined to use 0 and 1 as their recovery
