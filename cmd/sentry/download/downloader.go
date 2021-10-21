@@ -12,12 +12,12 @@ import (
 
 	"github.com/c2h5oh/datasize"
 	"github.com/holiman/uint256"
+	"github.com/ledgerwatch/erigon-lib/common/dbg"
 	"github.com/ledgerwatch/erigon-lib/direct"
 	"github.com/ledgerwatch/erigon-lib/gointerfaces"
 	proto_sentry "github.com/ledgerwatch/erigon-lib/gointerfaces/sentry"
 	"github.com/ledgerwatch/erigon-lib/kv"
 	"github.com/ledgerwatch/erigon/common"
-	debug2 "github.com/ledgerwatch/erigon/common/debug"
 	"github.com/ledgerwatch/erigon/consensus"
 	"github.com/ledgerwatch/erigon/core/forkid"
 	"github.com/ledgerwatch/erigon/core/types"
@@ -90,7 +90,7 @@ func RecvUploadMessage(ctx context.Context,
 	handleInboundMessage func(ctx context.Context, inreq *proto_sentry.InboundMessage, sentry direct.SentryClient) error,
 	wg *sync.WaitGroup,
 ) (err error) {
-	defer func() { err = debug2.ReportPanicAndRecover(err) }() // avoid crash because Erigon's core does many things
+	defer func() { err = dbg.Recover(err) }() // avoid crash because Erigon's core does many things
 	streamCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -181,7 +181,7 @@ func RecvUploadHeadersMessage(ctx context.Context,
 	handleInboundMessage func(ctx context.Context, inreq *proto_sentry.InboundMessage, sentry direct.SentryClient) error,
 	wg *sync.WaitGroup,
 ) (err error) {
-	defer func() { err = debug2.ReportPanicAndRecover(err) }() // avoid crash because Erigon's core does many things
+	defer func() { err = dbg.Recover(err) }() // avoid crash because Erigon's core does many things
 	streamCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -274,7 +274,7 @@ func RecvMessage(
 	handleInboundMessage func(ctx context.Context, inreq *proto_sentry.InboundMessage, sentry direct.SentryClient) error,
 	wg *sync.WaitGroup,
 ) (err error) {
-	defer func() { err = debug2.ReportPanicAndRecover(err) }() // avoid crash because Erigon's core does many things
+	defer func() { err = dbg.Recover(err) }() // avoid crash because Erigon's core does many things
 	streamCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	defer sentry.MarkDisconnected()
