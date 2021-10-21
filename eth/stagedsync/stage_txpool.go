@@ -67,6 +67,13 @@ func SpawnTxPool(s *StageState, tx kv.RwTx, cfg TxPoolCfg, ctx context.Context) 
 		if cfg.startFunc != nil {
 			cfg.startFunc()
 		}
+	} else {
+		headHash, err := rawdb.ReadCanonicalHash(tx, to)
+		if err != nil {
+			return err
+		}
+		headHeader := rawdb.ReadHeader(tx, headHash, to)
+		fmt.Printf("Fin started: %d,%d\n", headHeader.GasLimit, to)
 	}
 	if cfg.pool != nil && cfg.pool.IsStarted() && s.BlockNumber > 0 {
 		if err := incrementalTxPoolUpdate(logPrefix, s.BlockNumber, to, cfg.pool, tx, quitCh); err != nil {
