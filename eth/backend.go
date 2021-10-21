@@ -502,6 +502,7 @@ func New(stack *node.Node, config *ethconfig.Config, logger log.Logger) (*Ethere
 						return err
 					}
 				} else {
+					fmt.Printf("Start: %d, %d\n", hh.GasLimit, execution)
 					if err := backend.txPool.Start(hh.GasLimit, execution); err != nil {
 						return err
 					}
