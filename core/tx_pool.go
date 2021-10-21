@@ -903,6 +903,7 @@ func (pool *TxPool) addTxs(txs []types.Transaction, local, sync bool) []error {
 		// obtaining lock
 		_, err := tx.Sender(*pool.signer)
 		if err != nil {
+			panic(err)
 			errs[i] = ErrInvalidSender
 			invalidTxMeter.Set(1)
 			continue

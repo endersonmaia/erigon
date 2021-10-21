@@ -35,6 +35,23 @@ func (api *APIImpl) SendRawTransaction(ctx context.Context, encodedTx hexutil.By
 		return common.Hash{}, errors.New("only replay-protected (EIP-155) transactions allowed over RPC")
 	}
 	hash := txn.Hash()
+
+	tx, err := api.db.BeginRo(ctx)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	defer tx.Rollback()
+
+	blockNum := rawdb.ReadCurrentBlockNumber(tx)
+	cc, err := api.chainConfig(tx)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	signer := types.MakeSigner(cc, *blockNum)
+	from, err := txn.Sender(*signer)
+	if err != nil {
+		return common.Hash{}, err
+	}
 	res, err := api.txPool.Add(ctx, &txpool.AddRequest{RlpTxs: [][]byte{encodedTx}})
 	if err != nil {
 		return common.Hash{}, err
@@ -44,24 +61,8 @@ func (api *APIImpl) SendRawTransaction(ctx context.Context, encodedTx hexutil.By
 		return hash, fmt.Errorf("%s: %s", txpool.ImportResult_name[int32(res.Imported[0])], res.Errors[0])
 	}
 
-	tx, err := api.db.BeginRo(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	defer tx.Rollback()
-
 	// Print a log with full txn details for manual investigations and interventions
-	blockNum := rawdb.ReadCurrentBlockNumber(tx)
 	if blockNum == nil {
-		return common.Hash{}, err
-	}
-	cc, err := api.chainConfig(tx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	signer := types.MakeSigner(cc, *blockNum)
-	from, err := txn.Sender(*signer)
-	if err != nil {
 		return common.Hash{}, err
 	}
 
