@@ -1256,7 +1256,6 @@ func dumpState(chaindata string, block int, name string) error {
 				copy(ks[20:], k[20+8:])
 				n := binary.PutUvarint(numBuf, uint64(len(ks)))
 				if _, err = ws.Write(numBuf[:n]); err != nil {
-					2
 					return err
 				}
 				if _, err = ws.Write(ks[:]); err != nil {
