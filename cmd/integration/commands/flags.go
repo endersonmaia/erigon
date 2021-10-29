@@ -111,7 +111,7 @@ func withDatadir(cmd *cobra.Command) {
 }
 
 func withBatchSize(cmd *cobra.Command) {
-	cmd.Flags().StringVar(&batchSizeStr, "batchSize", "512M", "batch size for execution stage")
+	cmd.Flags().StringVar(&batchSizeStr, "batchSize", "256M", "batch size for execution stage")
 }
 
 func withIntegrityChecks(cmd *cobra.Command) {
